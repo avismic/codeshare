@@ -17,6 +17,15 @@
             --text: #2D3436;
         }
 
+        /* Dark mode variables */
+        .dark-mode {
+            --primary: #A29BFE;
+            --secondary: #6C5CE7;
+            --background: #2D3436;
+            --card-bg: #444;
+            --text: #F8F9FF;
+        }
+
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
@@ -24,6 +33,7 @@
             background: var(--background);
             color: var(--text);
             line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         header {
@@ -45,7 +55,7 @@
             letter-spacing: -1px;
         }
 
-        #language-select {
+        #language-select, #theme-toggle {
             padding: 0.8rem 1.5rem;
             border: 2px solid var(--primary);
             border-radius: 0.75rem;
@@ -56,8 +66,15 @@
             transition: all 0.2s ease;
         }
 
-        #language-select:hover {
+        #language-select:hover, #theme-toggle:hover {
             background: rgba(108, 92, 231, 0.1);
+        }
+
+        /* Adjust header to include theme toggle */
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
         .name-input-container {
@@ -97,6 +114,20 @@
             transform: translateY(0);
         }
 
+        .copy-message {
+            color: green;
+            font-size: 0.9em;
+            position: absolute;
+            bottom: -1.5rem;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .copy-message.show {
+            opacity: 1;
+        }
+
         .CodeMirror {
             border-radius: 1rem;
             margin: 2rem 0;
@@ -113,7 +144,7 @@
         .button-group {
             display: flex;
             gap: 1rem;
-            margin-bottom: 2rem;
+            align-items: center;
         }
 
         .button {
@@ -123,9 +154,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            position: relative;
         }
 
         #save-btn {
@@ -193,6 +222,21 @@
             align-items: center;
         }
 
+        .action-btn {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--primary);
+            border-radius: 0.5rem;
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(108, 92, 231, 0.1);
+        }
+
         .delete-btn {
             color: #FF5252;
             cursor: pointer;
@@ -209,12 +253,15 @@
 <body>
     <header>
         <h1>✨ CodeShare</h1>
-        <select id="language-select">
-            <option value="text">📝 Plain Text</option>
-            <option value="python">🐍 Python</option>
-            <option value="java">☕ Java</option>
-            <option value="cpp">🐅 C++</option>
-        </select>
+        <div class="header-controls">
+            <select id="language-select">
+                <option value="text">📝 Plain Text</option>
+                <option value="python">🐍 Python</option>
+                <option value="java">☕ Java</option>
+                <option value="cpp">🐅 C++</option>
+            </select>
+            <button id="theme-toggle">Toggle Theme</button>
+        </div>
     </header>
 
     <div class="name-input-container">
@@ -225,7 +272,10 @@
     <div id="editor"></div>
     
     <div class="button-group">
-        <button class="button" id="save-btn">💾 Save & Share</button>
+        <div style="position: relative;">
+            <button class="button" id="save-btn">💾 Save & Share</button>
+            <div id="copy-message" class="copy-message">Link to the CodeShare copied</div>
+        </div>
         <button class="button" id="new-btn">🆕 New CodeShare</button>
     </div>
 
@@ -246,6 +296,9 @@ let editor = CodeMirror(document.getElementById('editor'), {
     styleActiveLine: true
 });
 
+// Domain name for sharing
+const domain = "https://codeshare-lemon.vercel.app/";
+
 // Language Mode Mapping
 const modeMap = {
     'python': 'python',
@@ -258,6 +311,21 @@ const modeMap = {
 document.getElementById('language-select').addEventListener('change', (e) => {
     editor.setOption('mode', modeMap[e.target.value]);
 });
+
+// Theme Toggle Handler
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+});
+
+// Utility function to copy text to clipboard and show a message
+function copyToClipboard(text, messageElement) {
+    navigator.clipboard.writeText(text).then(() => {
+        messageElement.classList.add('show');
+        setTimeout(() => {
+            messageElement.classList.remove('show');
+        }, 2000);
+    });
+}
 
 // Delete Snippet Function
 function deleteSnippet(id) {
@@ -296,7 +364,8 @@ function loadHistory() {
                     <p>${snippet.timestamp} • ${snippet.language.toUpperCase()}</p>
                 </div>
                 <div class="snippet-actions">
-                    <a href="#${snippet.id}" onclick="loadSnippet('${snippet.id}')">🔗 Open</a>
+                    <a href="#${snippet.id}" onclick="loadSnippet('${snippet.id}')" class="action-btn">🔗 Open</a>
+                    <button class="action-btn" onclick="copySnippetLink('${snippet.id}')">Copy Link</button>
                     <span class="delete-btn" onclick="deleteSnippet('${snippet.id}')">🗑️ Delete</span>
                 </div>
             </div>
@@ -315,6 +384,14 @@ window.loadSnippet = function(id) {
     }
 }
 
+// Function to copy a snippet's link from history
+window.copySnippetLink = function(id) {
+    const shareUrl = `${domain}#${id}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        alert("Link copied to clipboard!");
+    });
+}
+
 // Save Button Handler
 document.getElementById('save-btn').addEventListener('click', () => {
     const snippetName = document.getElementById('snippet-name').value.trim();
@@ -331,10 +408,12 @@ document.getElementById('save-btn').addEventListener('click', () => {
     const language = document.getElementById('language-select').value;
     
     const id = saveCode(snippetName, code, language);
-    const shareUrl = `${window.location.href.split('#')[0]}#${id}`;
+    const shareUrl = `${domain}#${id}`;
     
-    alert(`Share this URL:\n${shareUrl}`);
-    document.getElementById('snippet-name').value = '';
+    // Copy the share URL to the clipboard and show the copy message
+    copyToClipboard(shareUrl, document.getElementById('copy-message'));
+    
+    // Do NOT clear the snippet name input so the name remains visible.
     loadHistory();
 });
 
@@ -342,6 +421,7 @@ document.getElementById('save-btn').addEventListener('click', () => {
 document.getElementById('new-btn').addEventListener('click', () => {
     editor.setValue('');
     document.getElementById('language-select').value = 'text';
+    // Optionally, you can clear the snippet name on new creation. Remove the next line if you want to preserve it.
     document.getElementById('snippet-name').value = '';
     document.querySelector('.error-message').classList.remove('show');
     window.location.hash = '';

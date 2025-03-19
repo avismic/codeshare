@@ -1,448 +1,439 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CodeShare</title>
-    <!-- CodeMirror Resources -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/theme/nord.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/clike/clike.min.js"></script>
-    <style>
-        :root {
-            --primary: #6C5CE7;
-            --secondary: #A8A4FF;
-            --background: #F8F9FF;
-            --card-bg: #FFFFFF;
-            --text: #2D3436;
-        }
-
-        /* Dark mode variables */
-        .dark-mode {
-            --primary: #A29BFE;
-            --secondary: #6C5CE7;
-            --background: #2D3436;
-            --card-bg: #444;
-            --text: #F8F9FF;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 2rem;
-            background: var(--background);
-            color: var(--text);
-            line-height: 1.6;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--card-bg);
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 2rem;
-            color: var(--primary);
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
-
-        #language-select, #theme-toggle {
-            padding: 0.8rem 1.5rem;
-            border: 2px solid var(--primary);
-            border-radius: 0.75rem;
-            background: transparent;
-            color: var(--primary);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        #language-select:hover, #theme-toggle:hover {
-            background: rgba(108, 92, 231, 0.1);
-        }
-
-        /* Adjust header to include theme toggle */
-        .header-controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .name-input-container {
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        #snippet-name {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            border: 2px solid #EDF2F7;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            background: var(--card-bg);
-            color: var(--text);
-            transition: all 0.2s ease;
-        }
-
-        #snippet-name:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
-            outline: none;
-        }
-
-        .error-message {
-            color: #FF5252;
-            font-size: 0.9em;
-            margin-top: 0.5rem;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            position: absolute;
-        }
-
-        .error-message.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .copy-message {
-            color: green;
-            font-size: 0.9em;
-            position: absolute;
-            bottom: -1.5rem;
-            left: 0;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .copy-message.show {
-            opacity: 1;
-        }
-
-        .CodeMirror {
-            border-radius: 1rem;
-            margin: 2rem 0;
-            border: 2px solid #EDF2F7;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        .CodeMirror:hover {
-            border-color: var(--primary);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .button {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        #save-btn {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
-        }
-
-        #save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
-        }
-
-        #new-btn {
-            background: var(--secondary);
-            color: white;
-        }
-
-        #new-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        #history {
-            margin-top: 3rem;
-            padding: 2rem;
-            background: var(--card-bg);
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
-        .snippet {
-            padding: 1.5rem;
-            margin: 1rem 0;
-            background: var(--card-bg);
-            border-radius: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .snippet:hover {
-            transform: translateY(-3px);
-            border-color: var(--primary);
-            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.1);
-        }
-
-        .snippet h3 {
-            margin: 0 0 0.5rem 0;
-            color: var(--primary);
-            font-size: 1.1rem;
-        }
-
-        .snippet p {
-            margin: 0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .snippet-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .action-btn {
-            padding: 0.5rem 0.75rem;
-            border: 2px solid var(--primary);
-            border-radius: 0.5rem;
-            background: transparent;
-            color: var(--primary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-        }
-
-        .action-btn:hover {
-            background: rgba(108, 92, 231, 0.1);
-        }
-
-        .delete-btn {
-            color: #FF5252;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            padding: 8px;
-            border-radius: 4px;
-        }
-
-        .delete-btn:hover {
-            background: rgba(255, 82, 82, 0.1);
-        }
-    </style>
+  <title>CodeShare</title>
+  <!-- CodeMirror Resources -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/theme/nord.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/clike/clike.min.js"></script>
+  <style>
+    :root {
+      --primary: #6C5CE7;
+      --secondary: #A8A4FF;
+      --background: #F8F9FF;
+      --card-bg: #FFFFFF;
+      --text: #2D3436;
+    }
+    .dark-mode {
+      --primary: #A29BFE;
+      --secondary: #6C5CE7;
+      --background: #2D3436;
+      --card-bg: #444;
+      --text: #F8F9FF;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: var(--card-bg);
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: var(--primary);
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+    #language-select, #theme-toggle {
+      padding: 0.8rem 1.5rem;
+      border: 2px solid var(--primary);
+      border-radius: 0.75rem;
+      background: transparent;
+      color: var(--primary);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    #language-select:hover, #theme-toggle:hover {
+      background: rgba(108, 92, 231, 0.1);
+    }
+    .header-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .name-input-container {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    #snippet-name {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      border: 2px solid #EDF2F7;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      background: var(--card-bg);
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    #snippet-name:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+      outline: none;
+    }
+    .error-message {
+      color: #FF5252;
+      font-size: 0.9em;
+      margin-top: 0.5rem;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      position: absolute;
+    }
+    .error-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .copy-message {
+      color: green;
+      font-size: 0.9em;
+      position: absolute;
+      bottom: -1.5rem;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .copy-message.show {
+      opacity: 1;
+    }
+    .CodeMirror {
+      border-radius: 1rem;
+      margin: 2rem 0;
+      border: 2px solid #EDF2F7;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    .CodeMirror:hover {
+      border-color: var(--primary);
+    }
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .button {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    #save-btn {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+    #save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+    #new-btn {
+      background: var(--secondary);
+      color: white;
+    }
+    #new-btn:hover {
+      transform: translateY(-2px);
+    }
+    #history {
+      margin-top: 3rem;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .snippet {
+      padding: 1.5rem;
+      margin: 1rem 0;
+      background: var(--card-bg);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .snippet:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary);
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.1);
+    }
+    .snippet h3 {
+      margin: 0 0 0.5rem 0;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+    .snippet p {
+      margin: 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .snippet-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .action-btn {
+      padding: 0.5rem 0.75rem;
+      border: 2px solid var(--primary);
+      border-radius: 0.5rem;
+      background: transparent;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .action-btn:hover {
+      background: rgba(108, 92, 231, 0.1);
+    }
+    .delete-btn {
+      color: #FF5252;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .delete-btn:hover {
+      background: rgba(255, 82, 82, 0.1);
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>✨ CodeShare</h1>
-        <div class="header-controls">
-            <select id="language-select">
-                <option value="text">📝 Plain Text</option>
-                <option value="python">🐍 Python</option>
-                <option value="java">☕ Java</option>
-                <option value="cpp">🐅 C++</option>
-            </select>
-            <button id="theme-toggle">Toggle Theme</button>
-        </div>
-    </header>
-
-    <div class="name-input-container">
-        <input type="text" id="snippet-name" placeholder="✨ Name your creation...">
-        <div class="error-message">Please input a name to save and share.</div>
+  <header>
+    <h1>✨ CodeShare</h1>
+    <div class="header-controls">
+      <select id="language-select">
+        <option value="text">📝 Plain Text</option>
+        <option value="python">🐍 Python</option>
+        <option value="java">☕ Java</option>
+        <option value="cpp">🐅 C++</option>
+      </select>
+      <button id="theme-toggle">Toggle Theme</button>
     </div>
+  </header>
 
-    <div id="editor"></div>
-    
-    <div class="button-group">
-        <div style="position: relative;">
-            <button class="button" id="save-btn">💾 Save & Share</button>
-            <div id="copy-message" class="copy-message">Link to the CodeShare copied</div>
-        </div>
-        <button class="button" id="new-btn">🆕 New CodeShare</button>
+  <div class="name-input-container">
+    <input type="text" id="snippet-name" placeholder="✨ Name your creation...">
+    <div class="error-message">Please input a name to save and share.</div>
+  </div>
+
+  <div id="editor"></div>
+
+  <div class="button-group">
+    <div style="position: relative;">
+      <button class="button" id="save-btn">💾 Save & Share</button>
+      <div id="copy-message" class="copy-message">Link to the CodeShare copied</div>
     </div>
+    <button class="button" id="new-btn">🆕 New CodeShare</button>
+  </div>
 
-    <div id="history">
-        <h2>📚 Your History</h2>
-    </div>
+  <div id="history">
+    <h2>📚 Your History</h2>
+  </div>
 
-<script>
-// Initialize CodeMirror Editor
-let editor = CodeMirror(document.getElementById('editor'), {
-    lineNumbers: true,
-    mode: 'python',
-    indentUnit: 4,
-    theme: 'nord',
-    viewportMargin: Infinity,
-    matchBrackets: true,
-    autoCloseBrackets: true,
-    styleActiveLine: true
-});
+  <script>
+    // Initialize CodeMirror Editor
+    let editor = CodeMirror(document.getElementById('editor'), {
+      lineNumbers: true,
+      mode: 'python',
+      indentUnit: 4,
+      theme: 'nord',
+      viewportMargin: Infinity,
+      matchBrackets: true,
+      autoCloseBrackets: true,
+      styleActiveLine: true
+    });
 
-// Domain name for sharing
-const domain = "https://codeshare-lemon.vercel.app/";
+    // Domain for sharing (change if needed)
+    const domain = "https://codeshare-lemon.vercel.app/";
 
-// Language Mode Mapping
-const modeMap = {
-    'python': 'python',
-    'java': 'text/x-java',
-    'cpp': 'text/x-c++src',
-    'text': 'text/plain'
-};
+    // Language Mode Mapping
+    const modeMap = {
+      'python': 'python',
+      'java': 'text/x-java',
+      'cpp': 'text/x-c++src',
+      'text': 'text/plain'
+    };
 
-// Handle Language Change
-document.getElementById('language-select').addEventListener('change', (e) => {
-    editor.setOption('mode', modeMap[e.target.value]);
-});
+    // Handle Language Change
+    document.getElementById('language-select').addEventListener('change', (e) => {
+      editor.setOption('mode', modeMap[e.target.value]);
+    });
 
-// Theme Toggle Handler
-document.getElementById('theme-toggle').addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-});
+    // Theme Toggle Handler
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
 
-// Utility function to copy text to clipboard and show a message
-function copyToClipboard(text, messageElement) {
-    navigator.clipboard.writeText(text).then(() => {
+    // Utility: Copy text to clipboard and show a message
+    function copyToClipboard(text, messageElement) {
+      navigator.clipboard.writeText(text).then(() => {
         messageElement.classList.add('show');
         setTimeout(() => {
-            messageElement.classList.remove('show');
+          messageElement.classList.remove('show');
         }, 2000);
-    });
-}
+      });
+    }
 
-// Delete Snippet Function
-function deleteSnippet(id) {
-    const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
-    const updatedSnippets = snippets.filter(snippet => snippet.id !== id);
-    localStorage.setItem('codeshares', JSON.stringify(updatedSnippets));
-    loadHistory();
-}
+    // Delete Snippet Function (local history)
+    function deleteSnippet(id) {
+      const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
+      const updatedSnippets = snippets.filter(snippet => snippet.id !== id);
+      localStorage.setItem('codeshares', JSON.stringify(updatedSnippets));
+      loadHistory();
+    }
 
-// Save to LocalStorage
-function saveCode(name, code, language) {
-    const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
-    const id = Date.now().toString();
-    snippets.push({ 
-        id, 
-        name: name || 'Untitled', 
-        code, 
-        language,
-        timestamp: new Date().toLocaleString()
-    });
-    localStorage.setItem('codeshares', JSON.stringify(snippets));
-    return id;
-}
+    // Save to LocalStorage for personal history
+    function saveCode(name, code, language) {
+      const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
+      const id = Date.now().toString();
+      snippets.push({ id, name: name || 'Untitled', code, language, timestamp: new Date().toLocaleString() });
+      localStorage.setItem('codeshares', JSON.stringify(snippets));
+      return id;
+    }
 
-// Load History
-function loadHistory() {
-    const historyDiv = document.getElementById('history');
-    historyDiv.innerHTML = '<h2>📚 Your History</h2>';
-    const snippets = JSON.parse(localStorage.getItem('codeshares') || []);
-    
-    snippets.reverse().forEach(snippet => {
+    // Load local history
+    function loadHistory() {
+      const historyDiv = document.getElementById('history');
+      historyDiv.innerHTML = '<h2>📚 Your History</h2>';
+      const snippets = JSON.parse(localStorage.getItem('codeshares') || []);
+      snippets.reverse().forEach(snippet => {
         historyDiv.innerHTML += `
-            <div class="snippet">
-                <div>
-                    <h3>${snippet.name}</h3>
-                    <p>${snippet.timestamp} • ${snippet.language.toUpperCase()}</p>
-                </div>
-                <div class="snippet-actions">
-                    <a href="#${snippet.id}" onclick="loadSnippet('${snippet.id}')" class="action-btn">🔗 Open</a>
-                    <button class="action-btn" onclick="copySnippetLink('${snippet.id}')">Copy Link</button>
-                    <span class="delete-btn" onclick="deleteSnippet('${snippet.id}')">🗑️ Delete</span>
-                </div>
+          <div class="snippet">
+            <div>
+              <h3>${snippet.name}</h3>
+              <p>${snippet.timestamp} • ${snippet.language.toUpperCase()}</p>
             </div>
+            <div class="snippet-actions">
+              <a href="#${snippet.id}" onclick="loadSnippet('${snippet.id}')" class="action-btn">🔗 Open</a>
+              <button class="action-btn" onclick="copySnippetLink('${snippet.id}')">Copy Link</button>
+              <span class="delete-btn" onclick="deleteSnippet('${snippet.id}')">🗑️ Delete</span>
+            </div>
+          </div>
         `;
-    });
-}
+      });
+    }
 
-// Load Snippet from History
-window.loadSnippet = function(id) {
-    const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
-    const snippet = snippets.find(s => s.id === id);
-    if(snippet) {
+    // Load snippet from local history or server
+    window.loadSnippet = function(id) {
+      // Try local first
+      const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
+      const snippet = snippets.find(s => s.id === id);
+      if (snippet) {
         editor.setValue(snippet.code);
         document.getElementById('language-select').value = snippet.language;
         window.location.hash = id;
-    }
-}
+      } else {
+        // Fallback: fetch from server (using our API)
+        fetch(`/api/save?id=${id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.code) {
+              editor.setValue(data.code);
+              document.getElementById('language-select').value = data.language;
+              window.location.hash = id;
+            } else {
+              alert("Snippet not found on server.");
+            }
+          })
+          .catch(err => console.error(err));
+      }
+    };
 
-// Function to copy a snippet's link from history
-window.copySnippetLink = function(id) {
-    const shareUrl = `${domain}#${id}`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    // Function to copy snippet link (from history)
+    window.copySnippetLink = function(id) {
+      const shareUrl = `${domain}#${id}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
         alert("Link copied to clipboard!");
-    });
-}
+      });
+    };
 
-// Save Button Handler
-document.getElementById('save-btn').addEventListener('click', () => {
-    const snippetName = document.getElementById('snippet-name').value.trim();
-    const errorElement = document.querySelector('.error-message');
-    
-    // Validate name
-    if (!snippetName) {
+    // Save Button Handler: Save snippet locally and to server via API
+    document.getElementById('save-btn').addEventListener('click', () => {
+      const snippetName = document.getElementById('snippet-name').value.trim();
+      const errorElement = document.querySelector('.error-message');
+      if (!snippetName) {
         errorElement.classList.add('show');
         return;
-    }
-    errorElement.classList.remove('show');
+      }
+      errorElement.classList.remove('show');
 
-    const code = editor.getValue();
-    const language = document.getElementById('language-select').value;
-    
-    const id = saveCode(snippetName, code, language);
-    const shareUrl = `${domain}#${id}`;
-    
-    // Copy the share URL to the clipboard and show the copy message
-    copyToClipboard(shareUrl, document.getElementById('copy-message'));
-    
-    // Do NOT clear the snippet name input so the name remains visible.
-    loadHistory();
-});
+      const code = editor.getValue();
+      const language = document.getElementById('language-select').value;
 
-// New Button Handler
-document.getElementById('new-btn').addEventListener('click', () => {
-    editor.setValue('');
-    document.getElementById('language-select').value = 'text';
-    // Optionally, you can clear the snippet name on new creation. Remove the next line if you want to preserve it.
-    document.getElementById('snippet-name').value = '';
-    document.querySelector('.error-message').classList.remove('show');
-    window.location.hash = '';
-});
+      // Save locally for history
+      const localId = saveCode(snippetName, code, language);
 
-// Initial Load
-window.addEventListener('load', () => {
-    // Load from URL hash
-    const hash = window.location.hash.substring(1);
-    if(hash) {
-        const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
-        const snippet = snippets.find(s => s.id === hash);
-        if(snippet) {
-            editor.setValue(snippet.code);
-            document.getElementById('language-select').value = snippet.language;
+      // Send snippet to server via our API endpoint
+      fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: snippetName, code, language })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.id) {
+          const shareUrl = `${domain}#${data.id}`;
+          copyToClipboard(shareUrl, document.getElementById('copy-message'));
+        } else {
+          alert("Error saving snippet on server");
         }
-    }
-    
-    // Load history
-    loadHistory();
-});
-</script>
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error communicating with the server");
+      });
+
+      // Preserve snippet name and update history
+      loadHistory();
+    });
+
+    // New Button Handler
+    document.getElementById('new-btn').addEventListener('click', () => {
+      editor.setValue('');
+      document.getElementById('language-select').value = 'text';
+      // Optionally clear snippet name if desired:
+      // document.getElementById('snippet-name').value = '';
+      document.querySelector('.error-message').classList.remove('show');
+      window.location.hash = '';
+    });
+
+    // On window load: If URL contains a snippet id, fetch it from the server
+    window.addEventListener('load', () => {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        fetch(`/api/save?id=${hash}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.code) {
+              editor.setValue(data.code);
+              document.getElementById('language-select').value = data.language;
+            } else {
+              alert("Snippet not found on server.");
+            }
+          })
+          .catch(err => console.error(err));
+      }
+      loadHistory();
+    });
+  </script>
 </body>
 </html>

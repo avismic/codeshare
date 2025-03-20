@@ -301,20 +301,11 @@
       loadHistory();
     }
 
-    // Save to LocalStorage for personal history
-    function saveCode(name, code, language) {
-      const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
-      const id = Date.now().toString();
-      snippets.push({ id, name: name || 'Untitled', code, language, timestamp: new Date().toLocaleString() });
-      localStorage.setItem('codeshares', JSON.stringify(snippets));
-      return id;
-    }
-
     // Load local history
     function loadHistory() {
       const historyDiv = document.getElementById('history');
       historyDiv.innerHTML = '<h2>📚 Your History</h2>';
-      const snippets = JSON.parse(localStorage.getItem('codeshares') || []);
+      const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
       snippets.reverse().forEach(snippet => {
         historyDiv.innerHTML += `
           <div class="snippet">
@@ -366,7 +357,7 @@
       });
     };
 
-    // Save Button Handler: Save snippet locally and to server via API
+    // Save Button Handler: Save snippet to server then store in local history using server-generated UUID
     document.getElementById('save-btn').addEventListener('click', () => {
       const snippetName = document.getElementById('snippet-name').value.trim();
       const errorElement = document.querySelector('.error-message');
@@ -379,9 +370,6 @@
       const code = editor.getValue();
       const language = document.getElementById('language-select').value;
 
-      // Save locally for history
-      const localId = saveCode(snippetName, code, language);
-
       // Send snippet to server via our API endpoint
       fetch('/api/save', {
         method: 'POST',
@@ -393,6 +381,18 @@
         if (data.id) {
           const shareUrl = `${domain}#${data.id}`;
           copyToClipboard(shareUrl, document.getElementById('copy-message'));
+
+          // Save snippet in localStorage using server-generated UUID
+          const snippets = JSON.parse(localStorage.getItem('codeshares') || '[]');
+          snippets.push({
+            id: data.id,
+            name: snippetName,
+            code: code,
+            language: language,
+            timestamp: new Date().toLocaleString()
+          });
+          localStorage.setItem('codeshares', JSON.stringify(snippets));
+          loadHistory();
         } else {
           alert("Error saving snippet on server");
         }
@@ -401,9 +401,6 @@
         console.error(err);
         alert("Error communicating with the server");
       });
-
-      // Preserve snippet name and update history
-      loadHistory();
     });
 
     // New Button Handler

@@ -415,7 +415,8 @@
 
     // On window load: If URL contains a snippet id, fetch it from the server
     window.addEventListener('load', () => {
-      const hash = window.location.hash.substring(1);
+      const hash = window.location.hash.substring(1).trim();
+      console.log("Extracted hash:",hash);
       if (hash) {
         fetch(`/api/save?id=${hash}`)
           .then(res => res.json())

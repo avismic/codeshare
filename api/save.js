@@ -33,15 +33,16 @@ export default async function handler(req, res) {
       .from('snippets')
       .select('*')
       .eq('id', id)
-      .single();
+      //.single();
 
-    if (error) {
+    if (error || !data || data.length === 0) {
+      console.error("Supabase select error:",error);
       return res.status(404).json({ error: "Snippet not found" });
     }
 
     return res.status(200).json(data);
-  } else {
-    res.setHeader("Allow", ["POST", "GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
+  } //else {
+    //res.setHeader("Allow", ["POST", "GET"]);
+    //return res.status(405).end(`Method ${req.method} Not Allowed`);
+  //}
 }

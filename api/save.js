@@ -29,6 +29,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No id provided" });
     }
 
+    console.log("GET request for snippet id:", id);
+
     const { data, error } = await supabase
       .from('snippets')
       .select('*')

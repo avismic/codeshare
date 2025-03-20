@@ -15,6 +15,7 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from('snippets')
       .insert([{ name, code, language }])
+      .select()
       .single();
 
     if (error) {

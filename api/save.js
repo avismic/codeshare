@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ id: data.id });
   } else if (req.method === "GET") {
     const { id } = req.query;
+    console.log("GET snippet id:",id);
     if (!id) {
       return res.status(400).json({ error: "No id provided" });
     }
@@ -37,9 +38,14 @@ export default async function handler(req, res) {
       .eq('id', id)
       //.single();
 
-    if (error || !data || data.length === 0) {
-      console.error("Supabase select error:",error);
-      return res.status(404).json({ error: "Snippet not found" });
+    if(error){
+      console.error("Supabase select error:", error);
+      return res.status(500).json({error: error.message});
+    }
+
+    console.log("Data returned from supabase:", data);
+    if(!data || data.length === 0){
+      return res.status(404).json({error:"Snippet not found"});
     }
 
     return res.status(200).json(data);
